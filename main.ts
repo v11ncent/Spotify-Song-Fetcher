@@ -1,4 +1,9 @@
-const axios = require("axios");
+import axios from "axios";
+import playlists from "./data/playlists.json";
+import { Playlist } from "./types";
+
+console.log(playlists);
+
 require("dotenv").config();
 
 const SPOTIFY_TOKEN_ENDPOINT: string = process.env.SPOTIFY_TOKEN_ENDPOINT as string;
@@ -47,6 +52,8 @@ const getArtist = async (token: string, artistId: string) => {
   }
 };
 
+// I need to build some type of query string builder for the optional args
+
 const getPlaylistItems = async (
   token: string,
   playlistId: string = "37i9dQZF1DZ06evO1JPXRC",
@@ -71,7 +78,9 @@ const getPlaylistItems = async (
   }
 };
 
+const getTopPlaylistsByYear = async (token: string, playlists: Playlist[]) => {};
+
 const run = (async () => {
   const token = await grabToken(SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET);
-  console.log(await getPlaylistItems(token));
+  //   console.log(await getPlaylistItems(token));
 })();
