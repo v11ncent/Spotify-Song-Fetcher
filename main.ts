@@ -1,12 +1,14 @@
 import axios from "axios";
+import mongoose from "mongoose";
 import * as dotenv from "dotenv";
 dotenv.config();
 import playlists from "./data/playlists.json";
+import PlaylistItemModel from "./models/PlaylistItems";
 import { Playlist } from "./types";
 
-const SPOTIFY_TOKEN_ENDPOINT: string = process.env.SPOTIFY_TOKEN_ENDPOINT as string;
 const SPOTIFY_CLIENT_ID: string = process.env.SPOTIFY_CLIENT_ID as string;
 const SPOTIFY_CLIENT_SECRET: string = process.env.SPOTIFY_CLIENT_SECRET as string;
+const MONGO_CONNECTION_STRING: string = process.env.MONGO_CONNECTION_STRING as string;
 
 const grabToken = async (clientId: string, clientSecret: string): Promise<string> => {
   const endpoint = "https://accounts.spotify.com/api/token";
@@ -82,7 +84,24 @@ const getTopPlaylistsByYear = async (token: string, playlists: Playlist[]) => {
   return Promise.all(playlists.map(async (playlist) => await getPlaylistItems(token, playlist.playlistId)));
 };
 
+const connectToMongo = (connectionString: string): void => {
+  mongoose.connect(connectionString);
+};
+
+const addToDatabase = () => {};
+
 const run = (async () => {
+  connectToMongo(MONGO_CONNECTION_STRING);
   const token = await grabToken(SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET);
-  getTopPlaylistsByYear(token, playlists).then((data) => console.log(data));
+  const playlistItemsFromAllPlaylists = await getTopPlaylistsByYear(token, playlists);
+
+  // definitely a better way than this, but gets the job done and I have limited time
+  for (let i = 0; i < playlistItemsFromAllPlaylists.length; i++) {
+    for (let j = 0; j < playlistItemsFromAllPlaylists[i].length; j++) {
+      const newPlaylistItem = new PlaylistItemModel(playlistItemsFromAllPlaylists[i][j]);
+      newPlaylistItem.save();
+    }
+  }
+
+  console.log("Done.");
 })();
