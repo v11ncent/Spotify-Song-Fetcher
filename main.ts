@@ -1,22 +1,16 @@
 const axios = require("axios");
 require("dotenv").config();
 
-type globalOptions = {
-  token: string | null;
-};
-
-const globalOptions: globalOptions = {
-  token: null,
-};
-
 const SPOTIFY_TOKEN_ENDPOINT: string = process.env.SPOTIFY_TOKEN_ENDPOINT as string;
 const SPOTIFY_CLIENT_ID: string = process.env.SPOTIFY_CLIENT_ID as string;
 const SPOTIFY_CLIENT_SECRET: string = process.env.SPOTIFY_CLIENT_SECRET as string;
 
-const grabToken = async (endpoint: string, clientId: string, clientSecret: string): Promise<string> => {
-  // I was going to make a decorator for this but I think it might be better to allow each function to granularly handle errors
+const grabToken = async (clientId: string, clientSecret: string): Promise<string> => {
+  const endpoint = "https://accounts.spotify.com/api/token";
+
+  // I was going to make a decorator for this but it might be better to allow each function to granularly handle errors
   try {
-    const token = await axios.post(
+    const response = await axios.post(
       endpoint,
       {
         grant_type: "client_credentials",
@@ -31,12 +25,53 @@ const grabToken = async (endpoint: string, clientId: string, clientSecret: strin
     );
 
     // we only care about the access_token
-    return token.data.access_token;
+    return response.data.access_token;
   } catch (error: any) {
-    throw new Error(`An error has occurred during ${grabToken.name}: ${error}`);
+    throw new Error(`An error has occurred during ${grabToken.name}(): ${error}`);
+  }
+};
+
+const getArtist = async (token: string, artistId: string) => {
+  const endpoint = `https://api.spotify.com/v1/artists/${artistId}`;
+
+  try {
+    const response = await axios.get(endpoint, {
+      headers: {
+        Authorization: `Bearer  ${token}`,
+      },
+    });
+
+    return response;
+  } catch (error) {
+    throw new Error(`An error has occurred during ${getArtist.name}(): ${error}`);
+  }
+};
+
+const getPlaylistItems = async (
+  token: string,
+  playlistId: string = "37i9dQZF1DZ06evO1JPXRC",
+  market?: string,
+  fields?: string,
+  limit?: Number,
+  offset?: Number,
+  additonalTypes?: string
+) => {
+  const endpoint = `https://api.spotify.com/v1/playlists/${playlistId}/tracks`;
+
+  try {
+    const response = await axios.get(endpoint, {
+      headers: {
+        Authorization: `Bearer  ${token}`,
+      },
+    });
+
+    return response.data.items;
+  } catch (error) {
+    throw new Error(`An error has occurred during ${getPlaylistItems.name}(): ${error}`);
   }
 };
 
 const run = (async () => {
-  globalOptions.token = await grabToken(SPOTIFY_TOKEN_ENDPOINT, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET);
+  const token = await grabToken(SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET);
+  console.log(await getPlaylistItems(token));
 })();
