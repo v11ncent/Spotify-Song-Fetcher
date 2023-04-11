@@ -1,9 +1,14 @@
 const axios = require("axios");
 require("dotenv").config();
 
-const globalOptions = {
+type globalOptions = {
+  token: string | null;
+};
+
+const globalOptions: globalOptions = {
   token: null,
 };
+
 const SPOTIFY_TOKEN_ENDPOINT: string = process.env.SPOTIFY_TOKEN_ENDPOINT as string;
 const SPOTIFY_CLIENT_ID: string = process.env.SPOTIFY_CLIENT_ID as string;
 const SPOTIFY_CLIENT_SECRET: string = process.env.SPOTIFY_CLIENT_SECRET as string;
@@ -32,6 +37,6 @@ const grabToken = async (endpoint: string, clientId: string, clientSecret: strin
   }
 };
 
-const x = grabToken(SPOTIFY_TOKEN_ENDPOINT, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET)
-  .then((data) => console.log(data))
-  .catch((error) => console.log("ERROR"));
+const run = (async () => {
+  globalOptions.token = await grabToken(SPOTIFY_TOKEN_ENDPOINT, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET);
+})();
